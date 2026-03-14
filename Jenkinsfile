@@ -14,20 +14,20 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'docker build -t ci-cd-sonarqube-docker .'
+                bat 'docker build -t ci-cd-sonarqube-docker .'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'pytest test/'
+                bat 'pytest test\\test_app.py'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
-                    sh 'mvn sonar:sonar'
+                    bat 'mvn sonar:sonar'
                 }
             }
         }
