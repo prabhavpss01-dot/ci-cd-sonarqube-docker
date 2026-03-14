@@ -20,7 +20,8 @@ pipeline {
 
         stage('Test') {
             steps {
-                bat 'pytest test\\test_app.py'
+                // Run tests inside the Docker container
+                bat 'docker run --rm ci-cd-sonarqube-docker pytest test/test_app.py'
             }
         }
 
@@ -29,6 +30,22 @@ pipeline {
                 withSonarQubeEnv('SonarQubeServer') {
                     bat 'mvn sonar:sonar'
                 }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    bat 'docker login -u %USER% -p %PASS%'
+                    bat 'docker tag ci-cd-sonarqube-docker %USER%/ci-cd-sonarqube-docker:latest'
+                    bat 'docker push %USER%/ci-cd-sonarqube-docker:latest'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                bat 'docker run -d -p 5000:5000 ci-cd-sonarqube-docker'
             }
         }
     }
